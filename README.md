@@ -18,6 +18,10 @@ This repository contains the reproducible cross-platform C++ benchmark and step-
 ├── scripts/
 │   ├── run_windows.ps1               # Build & run on Windows (MSVC or g++)
 │   └── run_macos.sh                  # Build & run on macOS (Apple Silicon / Intel clang++)
+├── results/
+│   ├── muhammed_windows/             # Machine 1: Muhammed's Windows PC (x86-64, 16 logical CPUs)
+│   ├── macbook_m1/                   # Machine 2: MacBook Air (Apple M1 ARM64, 8 CPUs, 128B line)
+│   └── zeynep_windows/               # Machine 3: Zeynep's Windows PC (x86-64, 6 P-core + 4 E-core)
 └── .gitignore
 ```
 
@@ -25,13 +29,17 @@ This repository contains the reproducible cross-platform C++ benchmark and step-
 
 ### Windows (PowerShell)
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/run_windows.ps1 -Threads 4 -Iterations 1000000 -Repetitions 5
+# Muhammed's PC
+powershell -ExecutionPolicy Bypass -File scripts/run_windows.ps1 -Threads 4 -Iterations 1000000 -Repetitions 5 -Machine muhammed_windows
+
+# Zeynep's PC
+powershell -ExecutionPolicy Bypass -File scripts/run_windows.ps1 -Threads 4 -Iterations 1000000 -Repetitions 5 -Machine zeynep_windows
 ```
 
 ### macOS (Terminal — Apple Silicon M1/M2/M3/M4 or Intel)
 ```bash
 chmod +x scripts/run_macos.sh
-./scripts/run_macos.sh 4 1000000 5
+./scripts/run_macos.sh 4 1000000 5 macbook_m1
 ```
 
 Both commands generate:

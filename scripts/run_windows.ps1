@@ -1,7 +1,8 @@
 param(
     [int]$Threads = 4,
     [uint64]$Iterations = 1000000,
-    [int]$Repetitions = 5
+    [int]$Repetitions = 5,
+    [string]$Machine = "muhammed_windows"
 )
 
 $ErrorActionPreference = "Stop"
@@ -15,4 +16,10 @@ if (Test-Path $VsDevCmd) {
     g++ -O2 -std=c++17 -pthread src/benchmark_crossplatform.cpp -o benchmark.exe
 }
 
+$OutDir = Join-Path $RepoRoot "results\$Machine"
+New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
+
 .\benchmark.exe $Threads $Iterations $Repetitions
+Move-Item -Force "$RepoRoot\raw.csv" "$OutDir\raw.csv"
+Move-Item -Force "$RepoRoot\addresses.csv" "$OutDir\addresses.csv"
+Write-Host "Results saved to: $OutDir"

@@ -9,11 +9,59 @@ $ErrorActionPreference = "Stop"
 $RepoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $RepoRoot
 
-$VsDevCmd = "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\VsDevCmd.bat"
-if (Test-Path $VsDevCmd) {
-    cmd /c "`"$VsDevCmd`" -arch=amd64 -no_logo >nul && cl /nologo /O2 /EHsc /std:c++17 src\benchmark_crossplatform.cpp /Fe:benchmark.exe"
-} else {
-    g++ -O2 -std=c++17 -pthread src/benchmark_crossplatform.cpp -o benchmark.exe
+$compiled = $false
+
+# 1) Try Visual Studio (any edition / BuildTools) via vswhere.exe
+$VsWhere = "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe"
+if (Test-Path $VsWhere) {
+    $vsPath = & $VsWhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+    if ($vsPath) {
+        $VsDevCmd = Join-Path $vsPath "Common7\Tools\VsDevCmd.bat"
+        if (Test-Path $VsDevCmd) {
+            Write-Host "[INFO] Compiling with MSVC ($vsPath)..."
+            cmd /c "`"$VsDevCmd`" -arch=amd64 -no_logo >nul && cl /nologo /O2 /EHsc /std:c++17 src\benchmark_crossplatform.cpp /Fe:benchmark.exe"
+            if ($LASTEXITCODE -eq 0) { $compiled = $true }
+        }
+    }
+}
+
+# 2) Try g++ (PATH or common MSYS2 / MinGW / Scoop / WinLibs locations)
+if (-not $compiled) {
+    $gppCandidates = @(
+        (Get-Command g++ -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source),
+        "C:\msys64\ucrt64\bin\g++.exe",
+        "C:\msys64\mingw64\bin\g++.exe",
+        "C:\mingw64\bin\g++.exe",
+        "C:\MinGW\bin\g++.exe",
+        "$env:USERPROFILE\scoop\shims\g++.exe"
+    ) | Where-Object { $_ -and (Test-Path $_) }
+
+    if ($gppCandidates.Count -gt 0) {
+        $gpp = $gppCandidates[0]
+        Write-Host "[INFO] Compiling with g++ ($gpp)..."
+        & $gpp -O2 -std=c++17 -pthread src/benchmark_crossplatform.cpp -o benchmark.exe
+        if ($LASTEXITCODE -eq 0) { $compiled = $true }
+    }
+}
+
+# 3) Try clang++ (PATH or LLVM default install)
+if (-not $compiled) {
+    $clangCandidates = @(
+        (Get-Command clang++ -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source),
+        "C:\Program Files\LLVM\bin\clang++.exe"
+    ) | Where-Object { $_ -and (Test-Path $_) }
+
+    if ($clangCandidates.Count -gt 0) {
+        $clang = $clangCandidates[0]
+        Write-Host "[INFO] Compiling with clang++ ($clang)..."
+        & $clang -O2 -std=c++17 src/benchmark_crossplatform.cpp -o benchmark.exe
+        if ($LASTEXITCODE -eq 0) { $compiled = $true }
+    }
+}
+
+if (-not $compiled) {
+    Write-Error "No C++ compiler found (MSVC, g++, or clang++). Please install Visual Studio Build Tools, MSYS2/MinGW, or LLVM, or check how D:\3_SEMESTER\Architecture of Computers\Proj\scripts\build.ps1 compiles."
+    exit 1
 }
 
 $OutDir = Join-Path $RepoRoot "results\$Machine"

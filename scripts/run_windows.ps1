@@ -59,15 +59,22 @@ if (-not $compiled) {
     }
 }
 
+$ExeToRun = ".\benchmark.exe"
 if (-not $compiled) {
-    Write-Error "No C++ compiler found (MSVC, g++, or clang++). Please install Visual Studio Build Tools, MSYS2/MinGW, or LLVM, or check how D:\3_SEMESTER\Architecture of Computers\Proj\scripts\build.ps1 compiles."
-    exit 1
+    $FallbackExe = Join-Path $RepoRoot "bin\benchmark_win64.exe"
+    if (Test-Path $FallbackExe) {
+        Write-Host "[INFO] No local C++ compiler found; using prebuilt static binary: bin\benchmark_win64.exe"
+        $ExeToRun = $FallbackExe
+    } else {
+        Write-Error "No C++ compiler found and bin\benchmark_win64.exe is missing."
+        exit 1
+    }
 }
 
 $OutDir = Join-Path $RepoRoot "results\$Machine"
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 
-.\benchmark.exe $Threads $Iterations $Repetitions
+& $ExeToRun $Threads $Iterations $Repetitions
 Move-Item -Force "$RepoRoot\raw.csv" "$OutDir\raw.csv"
 Move-Item -Force "$RepoRoot\addresses.csv" "$OutDir\addresses.csv"
 Write-Host "Results saved to: $OutDir"

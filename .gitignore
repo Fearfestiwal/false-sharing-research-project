@@ -1,5 +1,6 @@
 # Compiled binaries & build artifacts
 *.exe
+!bin/benchmark_win64.exe
 *.obj
 *.o
 *.out

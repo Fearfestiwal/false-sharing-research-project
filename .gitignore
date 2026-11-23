@@ -1,0 +1,24 @@
+# Compiled binaries & build artifacts
+*.exe
+*.obj
+*.o
+*.out
+*.pdb
+*.ilk
+benchmark
+benchmark_macos
+
+# OS & editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Python / env / secrets
+__pycache__/
+.venv/
+.env
+.env.*
+*.key
+*.pem
+credentials.json

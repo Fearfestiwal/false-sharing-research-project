@@ -1,0 +1,5 @@
+N_per_thread=1000000
+repetitions=7
+cache_line_cpuid=64
+mode=atomic_exchange_relaxed
+compiler=Clang 18.1.6 (https://github.com/ziglang/zig-bootstrap 98bc6bf4fc4009888d33941daf6b600d20a42a56)

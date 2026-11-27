@@ -46,18 +46,16 @@ Both commands generate:
 - `raw.csv` — All warm-up (`rep = -1`) and measured (`rep >= 0`) runs with correctness verification.
 - `addresses.csv` — Verified runtime memory addresses, `sizeof`, `alignof`, and 64B/128B cache-line indices.
 
-## Cross-Architecture Validation Summary (4 Threads, 1M Iterations, 5 Measured Reps + 1 Warm-up)
+## Three-Machine Cross-Architecture Validation Summary (4 Threads, 1M Iterations, 5 Measured Reps + 1 Warm-up)
 
-| Mode & Batch | Windows x86-64 (16 logical CPUs, MSVC) | Apple M1 ARM64 (8 logical CPUs, `hw.cachelinesize=128`, clang++) |
-| :--- | :--- | :--- |
-| `store`, `B=1` | `0.95 → 0.94 ms` (`1.01x`, 128B: `0.93 ms`) | `1.40–1.41 → 1.03 ms` (`1.36x`, 128B: `1.03–1.04 ms`) |
-| `store`, `B=16` | `0.92 → 0.92 ms` (`1.00x`) | `1.03–1.04 → 1.02–1.04 ms` (`1.00x`) |
-| `atomic`, `B=1` | `41.32 → 4.01 ms` (**`10.30x`**, 128B: `3.92 ms`) | `55.07–64.46 → 1.04 ms` (**`53.03x–61.96x`**, 128B: `1.04–1.05 ms`) |
-| `atomic`, `B=16` | `1.64 → 0.95 ms` (**`1.72x`**, 128B: `0.92 ms`) | `3.96–4.01 → 1.03–1.04 ms` (**`3.82x–3.89x`**) |
-| `atomic`, `B=256` | `0.93 → 0.93 ms` (`1.00x`) | `1.03 → 1.03 ms` (`1.00x`) |
-| `atomic`, `Local (end)` | `0.92 → 0.94 ms` (`0.97x`) | `1.03 → 1.03–1.04 ms` (`0.99x–1.00x`) |
+| Mode & Batch | Muhammed Windows (`x86-64`, 16 CPU) | Zeynep Windows (`x86-64`, 16 CPU) | MacBook Air Apple M1 (`ARM64`, 8 CPU, 128B line) |
+| :--- | :--- | :--- | :--- |
+| `store`, `B=1` | `0.95 → 0.94 ms` (`1.01x`) | `1.10 → 1.02 ms` (`1.09x`) | `1.04 → 1.04 ms` (`1.00x`) |
+| `store`, `B=16` | `0.92 → 0.92 ms` (`1.00x`) | `1.16 → 1.02 ms` (`1.14x`) | `1.03 → 1.03 ms` (`0.99x`) |
+| `atomic`, `B=1` | `41.32 → 4.01 ms` (**`10.30x`**) | `50.52 → 5.22 ms` (**`9.68x`**, 128B: `11.14x`) | `60.87 → 1.46 ms` (**`41.61x`**), 128B: `1.05 ms` (**`58.11x`**) |
+| `atomic`, `B=16` | `1.64 → 0.95 ms` (**`1.72x`**) | `3.26 → 1.12 ms` (**`2.91x`**) | `4.01 → 1.03 ms` (**`3.90x`**) |
+| `atomic`, `B=256` | `0.93 → 0.93 ms` (`1.00x`) | `1.11 → 1.07 ms` (`1.04x`) | `1.03 → 1.03 ms` (`1.00x`) |
+| `atomic`, `Local (end)` | `0.92 → 0.94 ms` (`0.97x`) | `1.10 → 1.07 ms` (`1.03x`) | `1.03 → 1.03 ms` (`1.00x`) |
 
-### Key Takeaways
-1. **Consistent across ISAs, OSes, and compilers:** On both Windows (x86-64, MSVC) and macOS (Apple M1 ARM64, clang++), padding delivers large speedups only under frequent atomic updates (`B=1`, `B=16`) and vanishes when updates become infrequent (`B=256`, `Local`).
-2. **64B vs. 128B on Apple M1:** Even though Apple M1 reports `hw.cachelinesize = 128` bytes, `alignas(64)` already matched `alignas(128)` (`1.04 ms` vs. `1.04–1.05 ms`) on this 4-thread workload, demonstrating the importance of empirical measurement over assuming hardware padding constants.
+Raw CSV files and verified runtime memory address logs for all three machines are archived under `results/muhammed_windows/`, `results/zeynep_windows/`, and `results/macbook_m1/`.
 

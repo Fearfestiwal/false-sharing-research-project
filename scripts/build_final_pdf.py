@@ -190,7 +190,7 @@ def build_pdf():
     story.append(Paragraph("Architecture of Computers &nbsp;|&nbsp; Group-4 &nbsp;|&nbsp; Vistula University &nbsp;|&nbsp; November 2026", s_affil))
     story.append(HRFlowable(width="100%", thickness=1.0, color=BLUE, spaceAfter=8))
 
-    # Abstract Box (Humanized: zero em/en dashes, direct statements, zero not-X-but-Y)
+    # Abstract Box (Humanized + numerically aligned + atomic stress-condition disclaimer)
     abs_text = (
         "<b>Abstract:</b> False sharing and frequent memory writes slow down multithreaded programs in different ways. "
         "We test both effects with a state-publication microbenchmark on an Intel Core i7-13620H running Windows 11, "
@@ -199,12 +199,14 @@ def build_pdf():
         "and hybrid-core placements. An initial ordinary-store run collected 792 measurements, and a workload-matched extension "
         "compared ordinary stores against relaxed atomic exchanges across 1,232 more measurements. Every correctness, affinity, "
         "and alignment check passed. With six physical performance-core workers publishing on every step, the matched ordinary-store "
-        "layout ratio was 1.04 (95% bootstrap interval spanning one). Under atomic exchange, the ratio rose to 8.50 and fell back "
-        "to 0.93 when workers published every 256 steps. The same pattern appeared on both x86-64 Windows laptops (MSVC, 9.68x to "
-        "10.30x at B=1; about 1.00x at B=256) and on Apple M1 ARM64 (clang++, 53.03x to 61.96x at B=1; 1.00x at B=256). "
-        "We did not collect hardware coherence counters, so these measurements establish conditional timing differences for the "
-        "tested workloads without directly counting cache-coherence traffic. Code, raw CSV data, and reproduction scripts are "
-        "publicly available at "
+        "layout ratio was 1.04 (95% bootstrap interval spanning one). Under an experimental atomic-exchange stress condition, the "
+        "ratio rose to 8.50 and fell back to 0.93 when workers published every 256 steps. The same frequency-dependent pattern "
+        "appeared on both x86-64 Windows laptops (MSVC, 9.68x to 10.30x at B=1; about 1.00x at B=256) and in the archived Apple M1 "
+        "ARM64 run (clang++, 41.61x for 64-byte padding and 58.11x for 128-byte padding at B=1; 1.00x at B=256). Because atomic "
+        "exchange was used strictly as an experimental stress condition, these large speedups should not be generalized to all "
+        "multithreaded applications. We did not collect hardware coherence counters, so these measurements establish conditional "
+        "timing differences for the tested workloads without directly counting cache-coherence traffic. Code, raw CSV data, and "
+        "reproduction instructions are publicly available at "
         '<link href="https://github.com/Fearfestiwal/false-sharing-research-project" color="#1D4ED8">'
         "https://github.com/Fearfestiwal/false-sharing-research-project</link>."
     )
@@ -327,9 +329,11 @@ def build_pdf():
     story.append(Paragraph(
         "Because the initial ordinary-store runs showed no clear six-P-core padding gain, we added a workload-matched extension "
         "(N=1,000,000 iterations/worker, 7 measured runs plus 1 warm-up per cell across 88 conditions, 616 runs per mode) comparing "
-        "ordinary stores against relaxed atomic exchange (<i>memory_order_relaxed</i>). Atomic exchange is used here to test write-primitive "
-        "sensitivity; ordinary worker-owned outputs do not require atomic exchange in practice. The atomic and store blocks ran one "
-        "after the other without interleaving, so absolute times across the two blocks reflect session state as well as instruction cost.", s_body))
+        "ordinary stores against relaxed atomic exchange (<i>memory_order_relaxed</i>). Atomic exchange was introduced strictly as "
+        "an experimental stress condition to probe sensitivity to write-primitive strength; ordinary worker-owned counters do not "
+        "require atomic exchange, and the large speedups observed under this stress condition must not be generalized to typical "
+        "multithreaded applications. The atomic and store blocks ran one after the other without interleaving, so absolute times "
+        "across the two blocks reflect session state as well as instruction cost.", s_body))
 
     story.append(KeepTogether([
         scaled_image(FIGS / "atomic_scaling.png", max_w_mm=160, max_h_mm=80),
@@ -394,12 +398,14 @@ def build_pdf():
     story.append(Paragraph("6. Interpretation, costs, and limitations", s_h1))
     story.append(Paragraph("6.1 Answer to the research question and memory cost", s_h2))
     story.append(Paragraph(
-        "Cache-line separation and write batching solve different problems. Padding produced large speedups only when separate "
-        "physical cores performed frequent atomic writes (8.50x on 6 P cores; 9.68x to 61.96x across the three validation machines "
-        "at B=1). When writes dropped to once per 256 steps, ran only at the end, used ordinary stores, or shared an SMT core, "
-        "padding gave little or no benefit. Reserving 64 bytes per worker instead of 8 bytes increases counter storage by 8x "
-        "(384 bytes vs. 48 bytes for six workers; 16x for 128-byte padding). Measuring the actual write rate and core placement "
-        "first avoids paying that memory cost where it brings no speedup.", s_body))
+        "Cache-line separation and write batching solve different problems. Padding produced large speedups only under our "
+        "experimental atomic-exchange stress condition when separate physical cores wrote frequently (8.50x on 6 P cores; "
+        "9.68x to 41.61x for 64-byte padding across the three validation machines at B=1, reaching 58.11x with 128-byte padding "
+        "on Apple M1). Those stress-condition numbers do not generalize to all multithreaded applications: when writes dropped to "
+        "once per 256 steps, ran only at the end, used ordinary stores, or shared an SMT core, padding gave little or no benefit. "
+        "Reserving 64 bytes per worker instead of 8 bytes increases counter storage by 8x (384 bytes vs. 48 bytes for six workers; "
+        "16x for 128-byte padding). Measuring the actual write rate, synchronization primitive, and core placement first avoids "
+        "paying that memory cost where it brings no speedup.", s_body))
 
     story.append(Paragraph("6.2 Evidence boundary and threats to validity", s_h2))
     story.append(Paragraph(
@@ -416,9 +422,10 @@ def build_pdf():
     story.append(Paragraph("6.3 Conclusion", s_h2))
     story.append(Paragraph(
         "Memory layout, publication interval, and write primitive should be measured separately. Across two x86-64 Windows laptops "
-        "and an Apple M1 ARM64 MacBook Air, padding gave large speedups under frequent cross-core atomic writes and lost its "
-        "advantage once writes were batched. Direct quantification of coherence traffic remains future work with hardware event "
-        "counters.", s_body))
+        "and an Apple M1 ARM64 MacBook Air, padding gave large speedups only under the experimental atomic-exchange stress condition "
+        "with frequent cross-core writes, and lost its advantage once writes were batched or performed with ordinary stores. These "
+        "stress-test gains should not be generalized to all multithreaded software. Direct quantification of coherence traffic "
+        "remains future work with hardware event counters.", s_body))
 
     # Section 7
     story.append(Paragraph("7. Reproducibility, AI declaration, and references", s_h1))
@@ -443,11 +450,11 @@ def build_pdf():
 
     story.append(Paragraph("7.3 References", s_h2))
     refs = [
-        '[1] W. J. Bolosky and M. L. Scott, "False Sharing and its Effect on Shared Memory Performance," USENIX SEDMS IV, 1993. <link href="https://www.usenix.org/legacy/publications/library/proceedings/sedms4/bolosky.html" color="#1D4ED8">usenix.org/.../bolosky.html</link>',
-        '[2] Intel, "False Sharing," Intel VTune Profiler Cookbook, v2024.2, 2024. <link href="https://www.intel.com/content/www/us/en/docs/vtune-profiler/cookbook/2024-2/false-sharing.html" color="#1D4ED8">intel.com/.../false-sharing.html</link>',
-        '[3] Intel, "Game Dev Guide for 12th Gen Intel Core Processor," updated June 13, 2022 (topology principles). <link href="https://www.intel.com/content/www/us/en/developer/articles/guide/12th-gen-intel-core-processor-gamedev-guide.html" color="#1D4ED8">intel.com/.../12th-gen-guide</link>',
-        '[4] Microsoft, "GetLogicalProcessorInformationEx function (sysinfoapi.h)," Microsoft Learn. <link href="https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-getlogicalprocessorinformationex" color="#1D4ED8">learn.microsoft.com/.../getlogicalprocessorinformationex</link>',
-        '[5] LLVM Project, "LLVM Atomic Instructions and Concurrency Guide," atomic and volatile operations. <link href="https://llvm.org/docs/Atomics.html" color="#1D4ED8">llvm.org/docs/Atomics.html</link>',
+        '[1] W. J. Bolosky and M. L. Scott, "False Sharing and its Effect on Shared Memory Performance," USENIX Symposium on Experiences with Distributed and Multiprocessor Systems (SEDMS IV), 1993. <link href="https://www.usenix.org/legacy/publications/library/proceedings/sedms4/bolosky.html" color="#1D4ED8">https://www.usenix.org/legacy/publications/library/proceedings/sedms4/bolosky.html</link>',
+        '[2] Intel, "False Sharing," Intel VTune Profiler Performance Analysis Cookbook, version 2024.2, 2024. <link href="https://www.intel.com/content/www/us/en/docs/vtune-profiler/cookbook/2024-2/false-sharing.html" color="#1D4ED8">https://www.intel.com/content/www/us/en/docs/vtune-profiler/cookbook/2024-2/false-sharing.html</link>',
+        '[3] Intel, "Game Dev Guide for 12th Gen Intel Core Processor," updated June 13, 2022 (used for hybrid-topology principles). <link href="https://www.intel.com/content/www/us/en/developer/articles/guide/12th-gen-intel-core-processor-gamedev-guide.html" color="#1D4ED8">https://www.intel.com/content/www/us/en/developer/articles/guide/12th-gen-intel-core-processor-gamedev-guide.html</link>',
+        '[4] Microsoft, "GetLogicalProcessorInformationEx function (sysinfoapi.h)," Microsoft Learn. <link href="https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-getlogicalprocessorinformationex" color="#1D4ED8">https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-getlogicalprocessorinformationex</link>',
+        '[5] LLVM Project, "LLVM Atomic Instructions and Concurrency Guide," section on atomic and volatile operations. <link href="https://llvm.org/docs/Atomics.html" color="#1D4ED8">https://llvm.org/docs/Atomics.html</link>',
     ]
     for r in refs:
         story.append(Paragraph(r, s_ref))

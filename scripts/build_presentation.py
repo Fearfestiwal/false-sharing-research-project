@@ -92,7 +92,7 @@ def make_charts():
     w = 0.25
     win_m = [10.30, 1.72, 1.00, 0.97]
     win_z = [9.68,  2.91, 1.04, 1.03]
-    mac_m1 = [57.50, 3.86, 1.00, 1.00]  # midpoint of 53.03x-61.96x & 3.82x-3.89x
+    mac_m1 = [41.61, 3.90, 1.00, 1.00]  # archived results/macbook_m1/raw.csv (8B / 64B)
 
     b1 = ax.bar(x - w, win_m, w, label="Windows PC #1 (x86-64, MSVC)", color="#2563EB", zorder=3)
     b2 = ax.bar(x,     win_z, w, label="Windows PC #2 (x86-64, MSVC)", color="#0D9488", zorder=3)
@@ -100,10 +100,10 @@ def make_charts():
 
     ax.axhline(1.0, color="#64748B", linestyle=":", linewidth=1.2, zorder=2)
     ax.set_ylabel("Padding Speedup (Adjacent 8B / Padded 64B)", fontsize=10, color="#1E293B", fontweight="bold")
-    ax.set_title("Cross-Machine Atomic Speedup vs. Update Frequency (4 Threads, 1M Ops)", fontsize=10.5, color="#0F172A", fontweight="bold", pad=10)
+    ax.set_title("Cross-Machine Atomic Stress-Test Speedup vs. Update Frequency (4T, 1M Ops)", fontsize=10.2, color="#0F172A", fontweight="bold", pad=10)
     ax.set_xticks(x)
     ax.set_xticklabels(batches, fontsize=9.5, color="#1E293B")
-    ax.set_ylim(0, 68)
+    ax.set_ylim(0, 50)
     ax.grid(axis="y", linestyle="--", alpha=0.4, zorder=0)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)

@@ -433,9 +433,9 @@ def build_pdf():
     story.append(Paragraph(
         'Source code, build and run scripts, raw CSV measurements, verified address logs (<font face="Courier" size="8.6">addresses.csv</font> '
         'with <font face="Courier" size="8.6">address / 64</font> and <font face="Courier" size="8.6">address % 64</font>), '
-        'and documentation are publicly archived at '
+        'and documentation are publicly archived at:<br/>'
         '<link href="https://github.com/Fearfestiwal/false-sharing-research-project" color="#1D4ED8">'
-        "https://github.com/Fearfestiwal/false-sharing-research-project</link>. "
+        "https://github.com/Fearfestiwal/false-sharing-research-project</link><br/>"
         "The archive covers the 2,288-run primary study (264 warm-ups, 2,024 measured runs, and 9,568 verified address records) "
         "alongside the cross-platform Windows and macOS benchmark suite. All correctness, affinity, and alignment checks passed, "
         "and no synthetic values were substituted.", s_body))

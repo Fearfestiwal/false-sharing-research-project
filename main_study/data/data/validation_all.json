@@ -1,0 +1,31 @@
+{
+  "datasets": [
+    {
+      "dataset": "data",
+      "conditions": 88,
+      "executions": 880,
+      "measured": 792,
+      "address_records": 3680,
+      "all_checks_passed": true
+    },
+    {
+      "dataset": "runs/atomic/data",
+      "conditions": 88,
+      "executions": 704,
+      "measured": 616,
+      "address_records": 2944,
+      "all_checks_passed": true
+    },
+    {
+      "dataset": "runs/matched_store/data",
+      "conditions": 88,
+      "executions": 704,
+      "measured": 616,
+      "address_records": 2944,
+      "all_checks_passed": true
+    }
+  ],
+  "total_executions": 2288,
+  "total_measured": 2024,
+  "total_addresses": 9568
+}
